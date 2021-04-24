@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, FamilyStructure # Importa elementos de models
 #from models import Person
 
 app = Flask(__name__)
@@ -20,6 +20,9 @@ db.init_app(app)
 CORS(app)
 setup_admin(app)
 
+#Creación de un objeto family 
+calvo_family = FamilyStructure('Calvo')
+
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
@@ -30,14 +33,28 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
+@app.route('/members', methods=['GET'])
 def handle_hello():
 
+    members = calvo_family.get_all_members()
     response_body = {
-        "msg": "Hello, this is your GET /user response "
+        "family": members
     }
 
     return jsonify(response_body), 200
+
+#Buscar por id
+@app.route('/member/<int:member_id>', methods=['GET'])
+def get_member(member_id=None):
+
+    member = calvo_family.get_member(member_id)
+
+    #Condicional si el id existe 
+    if member:
+        return jsonify(member), 200
+    else:
+        return jsonify({"Mensaje":"Id no existe"}), 400 #Si no existe
+
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
